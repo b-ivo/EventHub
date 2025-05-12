@@ -1,61 +1,51 @@
-function showSignupForm() {
-    document.getElementById("signupForm").classList.remove("hidden");
-    document.getElementById("formContainer").classList.remove("hidden");
-}
-
-function showLoginForm() {
-    document.getElementById("loginForm").classList.remove("hidden");
-    document.getElementById("formContainer").classList.remove("hidden");
-}
-
-function showPublishForm() {
-    document.getElementById("publishFeatureForm").classList.remove("hidden");
-    document.getElementById("formContainer").classList.remove("hidden");
-}
-
-function hideForms() {
-    document.getElementById("signupForm").classList.add("hidden");
-    document.getElementById("loginForm").classList.add("hidden");
-    document.getElementById("publishFeatureForm").classList.add("hidden");
-    document.getElementById("formContainer").classList.add("hidden");
-}
-
-function showPublishForm() {
-    document.getElementById("publishFeatureForm").classList.remove("hidden");
-    document.getElementById("adminFunctions").classList.remove("hidden");
-}
-
-function showUserManagement() {
-    alert("User management feature coming soon!");
-}
-
-function showAnalytics() {
-    alert("Analytics dashboard coming soon!");
-}
-
-function hideForms() {
-    document.getElementById("publishFeatureForm").classList.add("hidden");
-    document.getElementById("adminFunctions").classList.add("hidden");
-}
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Admin Dashboard JS Loaded!"); // Debugging Log
+    setupAdminFeatures();
+
+    // Ensure eventCategories exists before calling showEvents
+    if (document.getElementById("eventCategories")) {
+        showEvents();
+    } else {
+        console.error("Error: eventCategories container not found in DOM at page load.");
+    }
 });
+function loginUser() {
+    let email = document.getElementById("loginEmail")?.value.trim();
+    let password = document.getElementById("loginPassword")?.value.trim();
 
-
-// Signup Functionality
-function registerUser() {
-    let emailInput = document.getElementById("signupEmail");
-    let passwordInput = document.getElementById("signupPassword");
-    let roleInput = document.getElementById("signupRole");
-
-    if (!emailInput || !passwordInput || !roleInput) {
-        console.error("One or more input fields are missing!");
+    if (!email || !password) {
+        alert("Please enter both email and password.");
         return;
     }
 
-    let email = emailInput.value.trim();
-    let password = passwordInput.value.trim();
-    let role = roleInput.value;
+    fetch("login.php", {
+    method: "POST",
+    body: new URLSearchParams({ email, password }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    })
+    .then(response => response.text()) // Fetch raw text first
+    .then(text => {
+        try {
+            let data = JSON.parse(text); // Parse JSON safely
+            console.log("Login Response:", data);
+            if (data.status === "success") {
+                localStorage.setItem("loggedInUser", email);
+                localStorage.setItem("userRole", data.userRole);
+                window.location.href = './admin_dashboard.php'; // Redirect to dashboard
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error("Error parsing JSON response:", error, "Raw Response:", text);
+        }
+    })
+    .catch(error => console.error("Network error:", error));
+}
+
+
+function registerUser() {
+    let email = document.getElementById("signupEmail").value.trim();
+    let password = document.getElementById("signupPassword").value.trim();
+    let role = document.getElementById("signupRole").value;
 
     if (!email || !password || !role) {
         alert("Please fill in all fields.");
@@ -63,76 +53,92 @@ function registerUser() {
     }
 
     fetch("signup.php", {
-        method: "POST",
-        body: new URLSearchParams({ email, password, role }),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Signup Response:", data);
-        alert(data.message);
-    })
-    .catch(error => console.error("Error:", error));
+    method: "POST",
+    body: new URLSearchParams({ email, password, role }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        })
+        .then(response => {
+            return response.text(); // First check raw response
+        })
+        .then(text => {
+            try {
+                let data = JSON.parse(text); // Parse JSON safely
+                console.log("Signup Response:", data);
+                alert(data.message);
+            } catch (error) {
+                console.error("Error parsing JSON response:", error, "Raw Response:", text);
+            }
+        })
+        .catch(error => console.error("Network error:", error));
+
+
+    }
+
+
+// Show & Hide Forms
+function showSignupForm() {
+    document.getElementById("signupForm")?.classList.remove("hidden");
+    document.getElementById("formContainer")?.classList.remove("hidden");
 }
 
-
-// Login Functionality (Fixes duplicate issue)
-function loginUser() {
-    let email = document.getElementById("loginEmail").value;
-    let password = document.getElementById("loginPassword").value;
-
-    fetch("login.php", {
-        method: "POST",
-        body: new URLSearchParams({ email, password }),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("Login Response:", data); // Debugging Log
-        if (data.status === "success") {
-            localStorage.setItem("userRole", data.userRole);
-            window.location.href = data.redirect; // 🚀 Redirects to correct dashboard
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => console.error("Error:", error));
+function showLoginForm() {
+    document.getElementById("loginForm")?.classList.remove("hidden");
+    document.getElementById("formContainer")?.classList.remove("hidden");
 }
 
+function showPublishForm() {
+    document.getElementById("publishFeatureForm")?.classList.remove("hidden");
+    document.getElementById("formContainer")?.classList.remove("hidden");
+    document.getElementById("adminFunctions")?.classList.remove("hidden"); 
+}
 
-// Admin Feature Setup (Fixes unexpected "s" issue)
+function hideForms() {
+    document.getElementById("signupForm")?.classList.add("hidden");
+    document.getElementById("loginForm")?.classList.add("hidden");
+    document.getElementById("publishFeatureForm")?.classList.add("hidden");
+    document.getElementById("formContainer")?.classList.add("hidden");
+    document.getElementById("adminFunctions")?.classList.add("hidden"); 
+}
+
+// Admin Feature Setup
 function setupAdminFeatures() {
     let userRole = localStorage.getItem("userRole");
     let publishButtonContainer = document.getElementById("publishButtonContainer");
 
     if (!publishButtonContainer) {
-        console.warn("publishButtonContainer not found."); 
+        console.warn("Warning: publishButtonContainer not found.");
         return;
     }
 
-    if (userRole === "admin") {
-        publishButtonContainer.innerHTML = `<button onclick="showPublishForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Publish an Event</button>`;
-    } else {
-        publishButtonContainer.innerHTML = "";
-    }
+    publishButtonContainer.innerHTML = userRole === "admin"
+        ? `<button onclick="showPublishForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Publish an Event</button>`
+        : "";
 }
-setupAdminFeatures();
 
 // Event Publishing Functionality
 function addFeature() {
-    let category = document.getElementById("categoryInput")?.value.trim();
-    let title = document.getElementById("featureTitle")?.value.trim();
-    let location = document.getElementById("featureLocation")?.value.trim();
-    let date = document.getElementById("featureDate")?.value.trim();
-    let desc = document.getElementById("featureDesc")?.value.trim();
+    let categoryElement = document.getElementById("categoryInput");
+    let titleElement = document.getElementById("featureTitle");
+    let locationElement = document.getElementById("featureLocation");
+    let dateElement = document.getElementById("featureDate");
+    let descElement = document.getElementById("featureDesc");
 
-    if (!category || !title || !location || !date || !desc) {
-        console.error("Missing form fields!", { category, title, location, date, desc });
+    if (!categoryElement || !titleElement || !locationElement || !dateElement || !descElement) {
+        console.error("Error: Missing form fields!");
         alert("Please fill in all fields.");
         return;
     }
 
-    console.log("Publishing event:", { category, title, location, date, desc }); // Debugging log
+    let category = categoryElement.value.trim();
+    let title = titleElement.value.trim();
+    let location = locationElement.value.trim();
+    let date = dateElement.value.trim();
+    let desc = descElement.value.trim();
+
+    if (!category || !title || !location || !date || !desc) {
+        alert("Please fill in all fields.");
+        return;
+    }
 
     fetch("publish_event.php", {
         method: "POST",
@@ -141,79 +147,55 @@ function addFeature() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Publish Response:", data); // Debugging log
+        console.log("Publish Response:", data);
         alert(data.message);
         if (data.status === "success") {
             hideForms();
+            showEvents(); // Reload events after publishing
         }
     })
     .catch(error => console.error("Error:", error));
 }
 
-
-// Delete Event Functionality (Admin Only)
-function deleteEvent(eventId) {
-    fetch("delete_event.php", {
-        method: "POST",
-        body: new URLSearchParams({ id: eventId }),
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === "success") {
-            alert("Event deleted successfully!");
-            showEvents();
-        } else {
-            alert("Error: " + data.message);
-        }
-    })
-    .catch(error => console.error("Error:", error));
-}
-
-// Load Events from Database (Fix element reference issue)
+// Load Events from Database
 function showEvents() {
     fetch("get_events.php")
-    .then(response => response.json())
-    .then(events => {
-        console.log("Raw Events Response:", events); // Debugging log
+        .then(response => response.json())
+        .then(events => {
+            console.log("Fetched Events:", events); // Debugging log
 
-        if (!Array.isArray(events)) {
-            console.error("Error: events is not an array!", events);
-            return;
-        }
+            let container = document.getElementById("eventCategories");
+            if (!container) {
+                console.error("Error: eventCategories container not found!");
+                return;
+            }
 
-        let eventContainer = document.getElementById("latestEvents");
-        if (!eventContainer) {
-            console.warn("latestEvents container not found.");
-            return;
-        }
+            container.innerHTML = "";
 
-        eventContainer.innerHTML = ""; 
+            if (!Array.isArray(events) || events.length === 0) {
+                container.innerHTML = "<p class='text-center text-gray-600'>No upcoming events.</p>";
+                return;
+            }
 
-        if (events.length === 0) {
-            eventContainer.innerHTML = "<p class='text-center text-gray-600'>No upcoming events.</p>";
-            return;
-        }
-
-        events.forEach(event => {
-            let eventDiv = document.createElement("div");
-            eventDiv.className = "bg-white p-4 shadow-md rounded-md hover:shadow-lg transition transform duration-200";
-            eventDiv.innerHTML = `
-                <h3 class="text-lg font-bold">${event.title}</h3>
-                <p><strong>Category:</strong> ${event.category}</p>
-                <p><strong>Location:</strong> ${event.location}</p>
-                <p><strong>Date:</strong> ${event.date}</p>
-                <p><strong>Description:</strong> ${event.description}</p>
-            `;
-            eventContainer.appendChild(eventDiv);
-        });
-    })
-    .catch(error => console.error("Error fetching events:", error));
+            events.forEach(event => {
+                console.log("Rendering event:", event.title);
+                let eventDiv = document.createElement("div");
+                eventDiv.className = "bg-white p-4 shadow-md rounded-md hover:shadow-lg transition";
+                eventDiv.innerHTML = `
+                    <h3 class="text-lg font-bold">${event.title}</h3>
+                    <p><strong>Category:</strong> ${event.category}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <p><strong>Date:</strong> ${event.date}</p>
+                    <p><strong>Description:</strong> ${event.description}</p>
+                `;
+                container.appendChild(eventDiv);
+            });
+        })
+        .catch(error => console.error("Error fetching events:", error));
 }
 
-
-// Ensure everything runs when page loads
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector(".bg-green-500").addEventListener("click", registerUser);
-    document.querySelector(".bg-red-500").addEventListener("click", hideForms);
-});
+function logoutUser() {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userRole");
+    window.location.href = "home.php"; // Redirect to homepage after logout
+}

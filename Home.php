@@ -16,6 +16,7 @@
             <a href="user_dashboard.php" class="hover:text-gray-300">Events</a>
             <a href="about.php" class="hover:text-gray-300">About</a>
             <a href="contact.php" class="hover:text-gray-300">Contact</a>
+            <button onclick="logoutUser()" class="bg-red-500 text-white px-6 py-3 font-bold rounded-lg shadow-md hover:bg-red-600 transition">Logout</button>
         </div>
     </nav>
     <div id="publishButtonContainer"></div>
@@ -26,8 +27,8 @@
         <p class="text-lg mt-2">Join EventHub and explore events happening around you.</p>
         <div class="mt-6 flex flex-wrap justify-center gap-4">
             <button onclick="showPublishForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Publish Your Event</button>
-            <button onclick="showLoginForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Login</button>
-            <button onclick="showSignupForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Sign up</button>
+            <button onclick="showLoginForm()" id="loginButton" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Login</button>
+            <button onclick="showSignupForm()" id="signupButton" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Sign up</button>
         </div>
     </section>
     <div id="latestEvents" class="mt-6"></div>
@@ -37,13 +38,13 @@
         <div id="signupForm" class="hidden">
             <h3 class="text-lg font-bold">Sign Up</h3>
             <input type="text" id="signupEmail" class="border p-3 w-full mt-2 rounded-lg" placeholder="Email">
-            <input type="password" id="signupPassword" class="border p-3 w-full mt-2 rounded-lg" placeholder="Password">
+            <input  type="password" id="signupPassword" class="border p-3 w-full mt-2 rounded-lg" placeholder="Password">
             <select id="signupRole" class="border p-3 w-full mt-2 rounded-lg">
                 <option value="user">Regular User</option>
                 <option value="admin">Admin</option>
             </select>
             <div class="mt-4 space-x-4">
-                <button onclick="registerUser()" class="bg-green-500 text-white px-5 py-2 rounded-lg shadow-md hover:bg-green-600 transition">Sign Up</button>
+                <button onclick="registerUser()"  class="bg-green-500 text-white px-5 py-2 rounded-lg shadow-md hover:bg-green-600 transition">Sign Up</button>
                 <button onclick="hideForms()" class="bg-red-500 text-white px-5 py-2 rounded-lg shadow-md hover:bg-red-600 transition">Cancel</button>
             </div>
         </div>
@@ -57,6 +58,7 @@
                 <button onclick="hideForms()" class="bg-red-500 text-white px-5 py-2 rounded-lg shadow-md hover:bg-red-600 transition">Cancel</button>
             </div>
         </div>
+        
 
         <div id="publishFeatureForm" class="hidden">
             <h3 class="text-lg font-bold">Publish a New Event</h3>
@@ -78,8 +80,76 @@
             </div>
         </div>
     </div>
+    <div id="eventCategories"></div>
 
     <!-- Include JavaScript -->
     <script src="eventhub.js"></script>
+   <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    setupAdminFeatures();
+    hideLoginSignupButtons();
+    loadEventsSafely();
+});
 
+function hideLoginSignupButtons() {
+    let loggedInUser = localStorage.getItem("loggedInUser");
+    if (loggedInUser) {
+        document.getElementById("loginButton")?.classList.add("hidden");
+        document.getElementById("signupButton")?.classList.add("hidden");
+    } else {
+        console.log("No user logged in.");
+    }
+}
+
+function setupAdminFeatures() {
+    let userRole = localStorage.getItem("userRole");
+    let publishButtonContainer = document.getElementById("publishButtonContainer");
+
+    if (!publishButtonContainer) {
+        console.error("Error: publishButtonContainer not found!");
+        return;
+    }
+
+    publishButtonContainer.innerHTML = userRole === "admin"
+        ? `<button onclick="showPublishForm()" class="bg-white text-blue-500 px-6 py-3 font-bold rounded-lg shadow-md hover:bg-gray-200 transition">Publish an Event</button>`
+        : "";
+}
+
+function loadEventsSafely() {
+    let container = document.getElementById("eventCategories");
+
+    if (!container) {
+        console.error("Error: eventCategories container not found! Retrying...");
+        setTimeout(() => {
+            if (document.getElementById("eventCategories")) {
+                showEvents();
+            } else {
+                console.error("Fatal Error: eventCategories container still not found.");
+            }
+        }, 1000);
+    } else {
+        showEvents();
+    }
+}
+document.addEventListener("DOMContentLoaded", () => {
+    setupAdminFeatures();
+    hideLoginSignupButtons();
+    
+    setTimeout(() => {
+        let container = document.getElementById("eventCategories");
+        if (container) {
+            showEvents();
+        } else {
+            console.error("Fatal Error: eventCategories container still not found.");
+        }
+    }, 1000);
+});
+function logoutUser() {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("userRole");
+    window.location.href = "home.php"; // Redirect to homepage after logout
+}
+
+
+</script>
 </body>

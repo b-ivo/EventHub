@@ -62,7 +62,7 @@ if (!isset($_SESSION['userRole']) || $_SESSION['userRole'] !== "admin") {
     <!-- Latest Events Section -->
     <section class="mt-6 p-6 bg-white shadow-md rounded-lg max-w-4xl mx-auto">
         <h3 class="text-2xl font-bold mb-4">Recent Events</h3>
-        <div id="latestEvents"></div>
+        <div id="eventCategories"></div>
     </section>
 
     <!-- Include JavaScript -->
